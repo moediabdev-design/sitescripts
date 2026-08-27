@@ -3,12 +3,13 @@ window.onload = function() {
   var mobileHeader = document.getElementById('site-header-mobile');
   var lastY = window.pageYOffset;
   var hidden = false;
+  var revealPoint = 150; // how far down the page before hide/show behavior starts
 
   setInterval(function() {
     var y = window.pageYOffset;
     var delta = y - lastY;
 
-    if (y <= 10) {
+    if (y <= revealPoint) {
       hidden = false;
     } else if (delta > 5) {
       hidden = true;
