@@ -148,13 +148,65 @@ window.onload = function() {
   // an earlier anchor), the normal "scrolling up = show header" rule would
   // flicker it back into view mid-animation. Normal scroll behavior resumes
   // once the page stops moving.
+  //
+  // Two scenarios:
+  //   1. We're already on the home page — the target element exists here,
+  //      so just hide the header and let the native same-page hash jump
+  //      happen (existing behavior).
+  //   2. We're on a different page (e.g. a project page) — the target
+  //      element does NOT exist here. Left alone, the browser would
+  //      navigate to the home page URL with the hash attached and jump to
+  //      the anchor on load, with the header fully visible the whole time.
+  //      Instead we intercept the click, remember which anchor we wanted in
+  //      sessionStorage, and navigate to the plain page URL with no hash
+  //      (so the browser does NOT auto-jump on load). Once the home page
+  //      loads, we hide the header ourselves and perform the scroll
+  //      manually, reusing the same isAnchorScrolling logic above.
   var anchorLinks = document.querySelectorAll('a.nav-link[href="/#portfolio"], a.nav-link[href="/#skills"]');
   for (var j = 0; j < anchorLinks.length; j++) {
-    anchorLinks[j].addEventListener('click', function() {
-      hidden = true;
-      applyHiddenState();
-      isAnchorScrolling = true;
-      anchorScrollCheckY = window.pageYOffset;
+    anchorLinks[j].addEventListener('click', function(e) {
+      var href = this.getAttribute('href');
+      var url = new URL(href, window.location.origin);
+      var targetId = url.hash.replace('#', '');
+      var targetEl = document.getElementById(targetId);
+
+      if (targetEl) {
+        // Already on the home page: existing same-page behavior.
+        hidden = true;
+        applyHiddenState();
+        isAnchorScrolling = true;
+        anchorScrollCheckY = window.pageYOffset;
+      } else {
+        // On a different page: navigate to the home page WITHOUT the hash
+        // so there's no native anchor jump, then finish the job on load.
+        try {
+          sessionStorage.setItem('pendingAnchorScroll', targetId);
+          e.preventDefault();
+          window.location.href = url.pathname;
+        } catch (err) {
+          // sessionStorage unavailable (e.g. private browsing) — fall back
+          // to default navigation; header may briefly flash on arrival.
+        }
+      }
     });
+  }
+
+  // Resume a cross-page anchor scroll that was queued up before navigating
+  // here (see the "else" branch above).
+  try {
+    var pendingTarget = sessionStorage.getItem('pendingAnchorScroll');
+    if (pendingTarget) {
+      sessionStorage.removeItem('pendingAnchorScroll');
+      var pendingEl = document.getElementById(pendingTarget);
+      if (pendingEl) {
+        hidden = true;
+        applyHiddenState();
+        isAnchorScrolling = true;
+        anchorScrollCheckY = window.pageYOffset;
+        pendingEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  } catch (err) {
+    // sessionStorage unavailable — nothing to resume.
   }
 };
