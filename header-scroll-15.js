@@ -14,11 +14,6 @@
   if (earlyHeader) {
     earlyHeader.style.top = '-150px';
   }
-
-  var earlyToggle = document.getElementById('mobile-menu-toggle');
-  if (earlyToggle && !earlyToggle.classList.contains('open')) {
-    earlyToggle.style.top = '-80px';
-  }
 })();
 
 window.onload = function() {
