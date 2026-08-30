@@ -38,6 +38,7 @@ window.onload = function() {
       var isOpen = menuToggle.classList.toggle('open');
       menuDropdown.classList.toggle('open', isOpen);
       menuToggle.setAttribute('aria-expanded', isOpen);
+      document.body.classList.toggle('menu-open', isOpen); // added: locks scroll per your CSS
     });
 
     // Close the menu when any link inside it is clicked
@@ -47,6 +48,7 @@ window.onload = function() {
         menuToggle.classList.remove('open');
         menuDropdown.classList.remove('open');
         menuToggle.setAttribute('aria-expanded', 'false');
+        document.body.classList.remove('menu-open'); // added
       });
     }
 
