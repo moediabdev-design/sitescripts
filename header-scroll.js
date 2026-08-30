@@ -1,4 +1,17 @@
 window.onload = function() {
+  // Move the mobile menu elements to be direct children of <body>.
+  // This escapes any transformed ancestor Squarespace's template wrapper
+  // might apply, which is a known cause of position:fixed breaking on iOS Safari.
+  var menuToggle = document.getElementById('mobile-menu-toggle');
+  var menuDropdown = document.getElementById('mobile-menu-dropdown');
+
+  if (menuToggle && menuToggle.parentElement !== document.body) {
+    document.body.appendChild(menuToggle);
+  }
+  if (menuDropdown && menuDropdown.parentElement !== document.body) {
+    document.body.appendChild(menuDropdown);
+  }
+
   var debugBox = document.getElementById('debug-box');
   var header = document.getElementById('site-header-desktop');
   var lastY = window.pageYOffset;
@@ -30,15 +43,12 @@ window.onload = function() {
   }, 100);
 
   // Mobile menu toggle
-  var menuToggle = document.getElementById('mobile-menu-toggle');
-  var menuDropdown = document.getElementById('mobile-menu-dropdown');
-
   if (menuToggle && menuDropdown) {
     menuToggle.addEventListener('click', function() {
       var isOpen = menuToggle.classList.toggle('open');
       menuDropdown.classList.toggle('open', isOpen);
       menuToggle.setAttribute('aria-expanded', isOpen);
-      document.body.classList.toggle('menu-open', isOpen); // added: locks scroll per your CSS
+      document.body.classList.toggle('menu-open', isOpen);
     });
 
     // Close the menu when any link inside it is clicked
@@ -48,7 +58,7 @@ window.onload = function() {
         menuToggle.classList.remove('open');
         menuDropdown.classList.remove('open');
         menuToggle.setAttribute('aria-expanded', 'false');
-        document.body.classList.remove('menu-open'); // added
+        document.body.classList.remove('menu-open');
       });
     }
 
