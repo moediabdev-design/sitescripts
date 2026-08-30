@@ -7,7 +7,7 @@
 
   var TRANSITION_MS = 480; // roughly match your CSS transition duration
 
-  // Play "reveal" animation on every page load (covers -> reveals)
+  // Play "reveal" animation once the page (including images) has fully loaded
   function playReveal() {
     overlay.classList.add('covering');
     // force reflow so the browser registers the starting state
@@ -21,7 +21,7 @@
     }, TRANSITION_MS);
   }
 
-  window.addEventListener('DOMContentLoaded', playReveal);
+  window.addEventListener('load', playReveal);
 
   // Intercept internal link clicks to play "cover" animation before navigating
   document.addEventListener('click', function (e) {
