@@ -149,6 +149,18 @@ window.onload = function() {
   var anchorLinks = document.querySelectorAll('a.nav-link[href="/#portfolio"], a.nav-link[href="/#skills"]');
   for (var j = 0; j < anchorLinks.length; j++) {
     anchorLinks[j].addEventListener('click', function() {
+      var href = this.getAttribute('href');
+      var linkUrl = new URL(href, window.location.origin);
+
+      // Only hide right away if this click keeps us on the same page
+      // (i.e. we're already on the home page). If the link's path differs
+      // from where we currently are, this is a cross-page navigation —
+      // do nothing here and let the on-load hash check (below) handle
+      // hiding the header once the home page has actually loaded.
+      if (linkUrl.pathname !== window.location.pathname) {
+        return;
+      }
+
       hidden = true;
       applyHiddenState();
       isAnchorScrolling = true;
