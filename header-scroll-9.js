@@ -1,15 +1,36 @@
 window.onload = function() {
-  // Move the mobile menu elements to be direct children of <body>.
-  // This escapes any transformed ancestor Squarespace's template wrapper
-  // might apply, which is a known cause of position:fixed breaking on iOS Safari.
+  var MAX_Z = 2147483647;
+
+  // Move the header + mobile menu elements to be direct children of <body>.
+  // This escapes any transformed/positioned ancestor Squarespace's template
+  // wrapper might apply — a known cause of both position:fixed breaking on
+  // iOS Safari AND z-index losing to sibling sections (stacking context).
+  var header = document.getElementById('site-header-desktop');
   var menuToggle = document.getElementById('mobile-menu-toggle');
   var menuDropdown = document.getElementById('mobile-menu-dropdown');
 
-  if (menuToggle && menuToggle.parentElement !== document.body) {
-    document.body.appendChild(menuToggle);
+  function portalToBody(el) {
+    if (!el) return;
+    if (el.parentElement !== document.body) {
+      document.body.appendChild(el);
+    }
+    el.style.zIndex = MAX_Z;
   }
-  if (menuDropdown && menuDropdown.parentElement !== document.body) {
-    document.body.appendChild(menuDropdown);
+
+  portalToBody(header);
+  portalToBody(menuToggle);
+  portalToBody(menuDropdown);
+
+  // Keep the header pinned as a body child even if Squarespace injects
+  // other elements (cookie banners, announcement bars, popups) directly
+  // into <body> later and they happen to out-stack it.
+  if (window.MutationObserver && header) {
+    var stackObserver = new MutationObserver(function() {
+      portalToBody(header);
+      portalToBody(menuToggle);
+      portalToBody(menuDropdown);
+    });
+    stackObserver.observe(document.body, { childList: true });
   }
 
   // Smooth the hide/show of the hamburger icon
@@ -18,7 +39,6 @@ window.onload = function() {
   }
 
   var debugBox = document.getElementById('debug-box');
-  var header = document.getElementById('site-header-desktop');
   var lastY = window.pageYOffset;
   var hidden = false;
   var scrollAccumulator = 0; // tracks cumulative downward scroll since last reset
