@@ -23,7 +23,11 @@ window.onload = function() {
   var hidden = false;
   var scrollAccumulator = 0; // tracks cumulative downward scroll since last reset
 
-  var HIDE_THRESHOLD = 80; // <-- tweak this: pixels of downward scroll needed before hiding
+  var HIDE_THRESHOLD = 200; // <-- tweak this: pixels of downward scroll needed before hiding
+
+  // Used to detect when an anchor-triggered smooth-scroll has finished moving
+  var isAnchorScrolling = false;
+  var anchorScrollCheckY = null;
 
   function applyHiddenState() {
     if (header) {
@@ -37,6 +41,27 @@ window.onload = function() {
 
   setInterval(function() {
     var y = window.pageYOffset;
+
+    // While an anchor-triggered scroll is in progress, ignore normal
+    // hide/show logic entirely and just watch for the page to stop moving.
+    if (isAnchorScrolling) {
+      if (debugBox) {
+        debugBox.textContent = 'y=' + y + ' (waiting for anchor scroll to settle)';
+      }
+
+      if (y === anchorScrollCheckY) {
+        // No movement since the last check — scroll has settled.
+        isAnchorScrolling = false;
+        hidden = true;
+        scrollAccumulator = 0;
+        lastY = y;
+        applyHiddenState();
+      } else {
+        anchorScrollCheckY = y;
+      }
+      return;
+    }
+
     var delta = y - lastY;
 
     if (debugBox) {
@@ -96,20 +121,17 @@ window.onload = function() {
     });
   }
 
-  // Hide both the desktop header and the hamburger immediately when jumping
-  // to an in-page anchor (portfolio/skills), instead of waiting for the
-  // scroll listener to catch it.
+  // When jumping to an in-page anchor (portfolio/skills), don't hide the
+  // header immediately — the browser's smooth-scroll animation may move the
+  // page UP first (if you're already scrolled far down), which would
+  // otherwise trigger the normal "scrolling up = show header" logic and
+  // make it flicker back into view mid-jump. Instead, wait until the page
+  // actually stops moving, then hide it.
   var anchorLinks = document.querySelectorAll('a.nav-link[href="/#portfolio"], a.nav-link[href="/#skills"]');
   for (var j = 0; j < anchorLinks.length; j++) {
     anchorLinks[j].addEventListener('click', function() {
-      hidden = true;
-      scrollAccumulator = 0;
-      applyHiddenState();
-      // Sync lastY so the scroll listener doesn't immediately re-show it
-      // based on a stale delta once the jump/scroll finishes.
-      setTimeout(function() {
-        lastY = window.pageYOffset;
-      }, 50);
+      isAnchorScrolling = true;
+      anchorScrollCheckY = window.pageYOffset;
     });
   }
 };
