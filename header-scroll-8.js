@@ -23,7 +23,7 @@ window.onload = function() {
   var hidden = false;
   var scrollAccumulator = 0; // tracks cumulative downward scroll since last reset
 
-  var HIDE_THRESHOLD = 80; // <-- tweak this: pixels of downward scroll needed before hiding
+  var HIDE_THRESHOLD = 145; // <-- tweak this: pixels of downward scroll needed before hiding
 
   // Used to detect when an anchor-triggered smooth-scroll has finished moving
   var isAnchorScrolling = false;
