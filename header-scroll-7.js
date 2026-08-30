@@ -23,7 +23,7 @@ window.onload = function() {
   var hidden = false;
   var scrollAccumulator = 0; // tracks cumulative downward scroll since last reset
 
-  var HIDE_THRESHOLD = 200; // <-- tweak this: pixels of downward scroll needed before hiding
+  var HIDE_THRESHOLD = 80; // <-- tweak this: pixels of downward scroll needed before hiding
 
   // Used to detect when an anchor-triggered smooth-scroll has finished moving
   var isAnchorScrolling = false;
@@ -51,11 +51,11 @@ window.onload = function() {
 
       if (y === anchorScrollCheckY) {
         // No movement since the last check — scroll has settled.
+        // Header is already hidden (set at click time); just hand control
+        // back to the normal scroll logic from here on.
         isAnchorScrolling = false;
-        hidden = true;
         scrollAccumulator = 0;
         lastY = y;
-        applyHiddenState();
       } else {
         anchorScrollCheckY = y;
       }
@@ -121,15 +121,18 @@ window.onload = function() {
     });
   }
 
-  // When jumping to an in-page anchor (portfolio/skills), don't hide the
-  // header immediately — the browser's smooth-scroll animation may move the
-  // page UP first (if you're already scrolled far down), which would
-  // otherwise trigger the normal "scrolling up = show header" logic and
-  // make it flicker back into view mid-jump. Instead, wait until the page
-  // actually stops moving, then hide it.
+  // When jumping to an in-page anchor (portfolio/skills), hide the header
+  // immediately — but also suppress the normal scroll listener for the
+  // duration of the jump. Otherwise, if the browser's smooth-scroll
+  // animation happens to move the page UP (e.g. you're far down and jump to
+  // an earlier anchor), the normal "scrolling up = show header" rule would
+  // flicker it back into view mid-animation. Normal scroll behavior resumes
+  // once the page stops moving.
   var anchorLinks = document.querySelectorAll('a.nav-link[href="/#portfolio"], a.nav-link[href="/#skills"]');
   for (var j = 0; j < anchorLinks.length; j++) {
     anchorLinks[j].addEventListener('click', function() {
+      hidden = true;
+      applyHiddenState();
       isAnchorScrolling = true;
       anchorScrollCheckY = window.pageYOffset;
     });
