@@ -1,3 +1,26 @@
+// Runs immediately as this script executes (does NOT wait for window.onload,
+// which only fires once every image/asset on the page has finished loading).
+// If we're arriving here via a portfolio/skills link clicked from another
+// page, the header markup is already in the DOM at this point (it's part of
+// this same injected snippet, parsed before this script tag), so we can
+// hide it right away instead of waiting for the full page load.
+(function() {
+  var incomingAnchorHashes = ['#portfolio', '#skills'];
+  if (incomingAnchorHashes.indexOf(window.location.hash) === -1) {
+    return;
+  }
+
+  var earlyHeader = document.getElementById('site-header-desktop');
+  if (earlyHeader) {
+    earlyHeader.style.top = '-150px';
+  }
+
+  var earlyToggle = document.getElementById('mobile-menu-toggle');
+  if (earlyToggle && !earlyToggle.classList.contains('open')) {
+    earlyToggle.style.top = '-80px';
+  }
+})();
+
 window.onload = function() {
   var MAX_Z = 2147483647;
 
