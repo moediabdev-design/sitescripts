@@ -27,26 +27,29 @@ window.onload = function() {
   var menuToggle = document.getElementById('mobile-menu-toggle');
   var menuDropdown = document.getElementById('mobile-menu-dropdown');
 
-  function portalToBody(el) {
+  function portalToBody(el, zIndex) {
     if (!el) return;
     if (el.parentElement !== document.body) {
       document.body.appendChild(el);
     }
-    el.style.zIndex = MAX_Z;
+    el.style.zIndex = zIndex;
   }
 
-  portalToBody(header);
-  portalToBody(menuToggle);
-  portalToBody(menuDropdown);
+  // The toggle button must stay ABOVE the fullscreen dropdown menu (so its
+  // X icon remains visible and tappable once the menu is open), so it gets
+  // a strictly higher z-index than the dropdown, not the same one.
+  portalToBody(header, MAX_Z - 2);
+  portalToBody(menuDropdown, MAX_Z - 1);
+  portalToBody(menuToggle, MAX_Z);
 
   // Keep the header pinned as a body child even if Squarespace injects
   // other elements (cookie banners, announcement bars, popups) directly
   // into <body> later and they happen to out-stack it.
   if (window.MutationObserver && header) {
     var stackObserver = new MutationObserver(function() {
-      portalToBody(header);
-      portalToBody(menuToggle);
-      portalToBody(menuDropdown);
+      portalToBody(header, MAX_Z - 2);
+      portalToBody(menuDropdown, MAX_Z - 1);
+      portalToBody(menuToggle, MAX_Z);
     });
     stackObserver.observe(document.body, { childList: true });
   }
