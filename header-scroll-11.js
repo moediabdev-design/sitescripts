@@ -141,72 +141,35 @@ window.onload = function() {
     });
   }
 
-  // When jumping to an in-page anchor (portfolio/skills), hide the header
-  // immediately — but also suppress the normal scroll listener for the
-  // duration of the jump. Otherwise, if the browser's smooth-scroll
-  // animation happens to move the page UP (e.g. you're far down and jump to
-  // an earlier anchor), the normal "scrolling up = show header" rule would
-  // flicker it back into view mid-animation. Normal scroll behavior resumes
-  // once the page stops moving.
-  //
-  // Two scenarios:
-  //   1. We're already on the home page — the target element exists here,
-  //      so just hide the header and let the native same-page hash jump
-  //      happen (existing behavior).
-  //   2. We're on a different page (e.g. a project page) — the target
-  //      element does NOT exist here. Left alone, the browser would
-  //      navigate to the home page URL with the hash attached and jump to
-  //      the anchor on load, with the header fully visible the whole time.
-  //      Instead we intercept the click, remember which anchor we wanted in
-  //      sessionStorage, and navigate to the plain page URL with no hash
-  //      (so the browser does NOT auto-jump on load). Once the home page
-  //      loads, we hide the header ourselves and perform the scroll
-  //      manually, reusing the same isAnchorScrolling logic above.
+  // When jumping to an in-page anchor (portfolio/skills) FROM THE HOME PAGE
+  // ITSELF, hide the header immediately and suppress the normal scroll
+  // listener for the duration of the jump — original, unmodified behavior.
+  // Clicking these links here doesn't reload the page (same-page hash
+  // change), so this is all that's needed for this case.
   var anchorLinks = document.querySelectorAll('a.nav-link[href="/#portfolio"], a.nav-link[href="/#skills"]');
   for (var j = 0; j < anchorLinks.length; j++) {
-    anchorLinks[j].addEventListener('click', function(e) {
-      var href = this.getAttribute('href');
-      var url = new URL(href, window.location.origin);
-      var targetId = url.hash.replace('#', '');
-      var targetEl = document.getElementById(targetId);
-
-      if (targetEl) {
-        // Already on the home page: existing same-page behavior.
-        hidden = true;
-        applyHiddenState();
-        isAnchorScrolling = true;
-        anchorScrollCheckY = window.pageYOffset;
-      } else {
-        // On a different page: navigate to the home page WITHOUT the hash
-        // so there's no native anchor jump, then finish the job on load.
-        try {
-          sessionStorage.setItem('pendingAnchorScroll', targetId);
-          e.preventDefault();
-          window.location.href = url.pathname;
-        } catch (err) {
-          // sessionStorage unavailable (e.g. private browsing) — fall back
-          // to default navigation; header may briefly flash on arrival.
-        }
-      }
+    anchorLinks[j].addEventListener('click', function() {
+      hidden = true;
+      applyHiddenState();
+      isAnchorScrolling = true;
+      anchorScrollCheckY = window.pageYOffset;
     });
   }
 
-  // Resume a cross-page anchor scroll that was queued up before navigating
-  // here (see the "else" branch above).
-  try {
-    var pendingTarget = sessionStorage.getItem('pendingAnchorScroll');
-    if (pendingTarget) {
-      sessionStorage.removeItem('pendingAnchorScroll');
-      var pendingEl = document.getElementById(pendingTarget);
-      if (pendingEl) {
-        hidden = true;
-        applyHiddenState();
-        isAnchorScrolling = true;
-        anchorScrollCheckY = window.pageYOffset;
-        pendingEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }
-  } catch (err) {
-    // sessionStorage unavailable — nothing to resume.
+  // Clicking the same links from ANY OTHER page triggers a real page
+  // navigation to the home page with the hash still attached (e.g.
+  // "/#portfolio"), and the browser handles that navigation + anchor jump
+  // entirely on its own — we don't touch the click for that case at all.
+  // What we DO need is to hide the header once we land here, in sync with
+  // that jump. We detect it simply: if the URL we loaded already has one of
+  // these hashes in it, we just arrived via that flow. Hide the header and
+  // hand off to the same isAnchorScrolling logic used above so it releases
+  // control once the page settles.
+  var incomingAnchorHashes = ['#portfolio', '#skills'];
+  if (incomingAnchorHashes.indexOf(window.location.hash) !== -1) {
+    hidden = true;
+    applyHiddenState();
+    isAnchorScrolling = true;
+    anchorScrollCheckY = window.pageYOffset;
   }
 };
